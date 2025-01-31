@@ -1,0 +1,13 @@
+{
+  "content": null,
+  "embeds": [
+    {
+      "description": "# 🔒 Informações sobre Softlock\n\n- O **softlock** é uma medida disciplinar implementada para garantir a ordem e o respeito dentro da comunidade. Trata-se de uma ação semelhante a um blacklist, porém com características específicas que permitem ao usuário ainda estar presente no servidor, mas com acesso extremamente limitado. Abaixo estão os detalhes sobre o funcionamento, motivações e remoção dessa medida.\n\n## O que é Softlock\n```ansi\n\u001b[37mO softlock restringe a visibilidade de todos os canais do servidor para o usuário afetado, exceto por um único canal informativo. Esse canal é dedicado exclusivamente para comunicar ao usuário o motivo da aplicação da medida e fornecer orientações caso deseje regularizar sua situação. O objetivo principal do softlock é criar uma barreira educativa, \u001b[1;31mpreservando a harmonia da comunidade\u001b[0;37m sem recorrer ao banimento imediato.\u001b[0m```\n\n## Remoção do Softlock\n```ansi\n\u001b[37mA remoção do softlock é uma ação restrita e só pode ser realizada por um representante legal da administração \u001b[1;31mSNOWYIE\u001b[0;37m. Essa medida é deliberada e considera \u001b[1;31mo comportamento do usuário\u001b[0;37m, bem como \u001b[1;31mo impacto gerado na comunidade\u001b[0;37m. A remoção será analisada caso o usuário apresente argumentos válidos ou tenha cumprido os critérios estabelecidos pela administração para retomar o acesso completo.\u001b[0m```\n\n## Motivações para Aplicação\n```ansi\n\u001b[37mO softlock pode ser aplicado como resultado de \u001b[1;31muma decisão democrática\u001b[0;37m envolvendo a maioria dos membros da comunidade ou diretamente pela administração, dependendo da gravidade do caso. Ele é geralmente utilizado em situações em que \u001b[1;31mo comportamento do usuário ameaça\u001b[0;37m o bem-estar ou o funcionamento do servidor. As motivações incluem, mas não se limitam a, \u001b[1;31mviolações severas das diretrizes do servidor\u001b[0;37m ou condutas prejudiciais que não justificam um banimento definitivo de imediato.\u001b[0m```\n\nEsta medida visa manter a organização e o bem-estar da comunidade.\n\n-# **Nota Importante**: A administração reserva-se o direito de manter, reavaliar ou ajustar a aplicação do softlock de acordo com as circunstâncias e as necessidades da comunidade. Essa medida existe para promover um ambiente mais seguro, organizado e respeitoso para todos os participantes.",
+      "color": 15548997,
+      "image": {
+        "url": "https://i.imgur.com/ixRDdCO.png"
+      }
+    }
+  ],
+  "attachments": []
+}

@@ -1,0 +1,71 @@
+const { SlashCommandBuilder } = require('discord.js');
+const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
+const categories = require('../../../../shared/categories'); // Importa categorias compartilhadas
+
+// -------- x ---- - x - ---- x -------- \\
+// Comando Atualizado para a nova update:
+// -------- x ---- - x - ---- x -------- //
+
+module.exports = {
+    data: new SlashCommandBuilder()
+        .setName('softlocksetup')
+        .setDescription('Configura permissões de softlock para todos os canais do servidor, exceto os da categoria SoftLock.'),
+    commandAlias: ['setupsoftlock'],
+    requiredRoles: ['ADMIN'], // Restrições de Cargo
+    supportsPrefix: true, // Habilita suporte a prefixo
+
+    async execute(context, args) {
+        const isInteraction = context.isCommand?.();
+        const guild = context.guild;
+
+        // Obtém o cargo SOFTLOCKED_ROLE do MongoDB
+        const softlockRoleConfig = await RoleConfig.findOne({ roleName: 'SOFTLOCKED_ROLE', guildId: guild.id });
+        if (!softlockRoleConfig) {
+            const replyMessage = ':x: O cargo "Softlock" não está configurado no servidor.';
+            return isInteraction
+                ? context.reply({ content: replyMessage, ephemeral: true })
+                : context.channel.send(replyMessage);
+        }
+
+        const softlockRole = guild.roles.cache.get(softlockRoleConfig.roleId);
+        if (!softlockRole) {
+            const replyMessage = ':x: O cargo "Softlock" configurado não foi encontrado no servidor.';
+            return isInteraction
+                ? context.reply({ content: replyMessage, ephemeral: true })
+                : context.channel.send(replyMessage);
+        }
+
+        try {
+            if (isInteraction) {
+                await context.deferReply({ ephemeral: true });
+            }
+
+            // Filtra canais fora da categoria SoftLock e ignora categorias
+            const channels = guild.channels.cache.filter(
+                channel => channel.parentId !== categories.SOFTLOCK_CATEGORY && (channel.isTextBased() || channel.isVoiceBased())
+            );
+
+            for (const channel of channels.values()) {
+                if (!channel.permissionOverwrites) continue; // Verifica se o canal suporta permissões
+
+                await channel.permissionOverwrites.edit(softlockRole, {
+                    ViewChannel: false,
+                    SendMessages: false,
+                    Connect: false,
+                    ReadMessageHistory: false,
+                });
+            }
+
+            const successMessage = '✅ Permissões de softlock configuradas para todos os canais do servidor (exceto os da categoria SoftLock).';
+            return isInteraction
+                ? context.editReply(successMessage)
+                : context.channel.send(successMessage);
+        } catch (error) {
+            console.error('[SoftLockSetup Command] Erro ao configurar permissões:', error);
+            const errorMessage = ':x: Ocorreu um erro ao configurar permissões de softlock.';
+            return isInteraction
+                ? context.editReply(errorMessage)
+                : context.channel.send(errorMessage);
+        }
+    },
+};
