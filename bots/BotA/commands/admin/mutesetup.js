@@ -1,9 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,18 +17,24 @@ module.exports = {
         // Obtém o cargo MUTED_ROLE do MongoDB
         const mutedRoleConfig = await RoleConfig.findOne({ roleName: 'MUTED_ROLE', guildId: guild.id });
         if (!mutedRoleConfig) {
-            const replyMessage = ':x: O cargo de "Mutado" não está configurado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" não está configurado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: replyMessage, ephemeral: true })
-                : context.channel.send(replyMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const muteRole = guild.roles.cache.get(mutedRoleConfig.roleId);
         if (!muteRole) {
-            const replyMessage = ':x: O cargo de "Mutado" configurado não foi encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" configurado não foi encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: replyMessage, ephemeral: true })
-                : context.channel.send(replyMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
@@ -40,7 +42,7 @@ module.exports = {
                 await context.deferReply({ ephemeral: true });
             }
 
-            const channels = guild.channels.cache.filter(channel => 
+            const channels = guild.channels.cache.filter(channel =>
                 channel.isTextBased() || channel.isVoiceBased()
             );
 
@@ -54,16 +56,23 @@ module.exports = {
                 });
             }
 
-            const successMessage = '✅ Permissões de mute configuradas para todos os canais do servidor.';
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription('✅ **Permissões de mute configuradas para todos os canais do servidor.**')
+
             return isInteraction
-                ? context.editReply(successMessage)
-                : context.channel.send(successMessage);
+                ? context.editReply({ embeds: [successEmbed] })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[MuteSetup Command] Erro ao configurar permissões:', error);
-            const errorMessage = ':x: Ocorreu um erro ao configurar permissões de mute.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao configurar permissões de mute.**');
+
             return isInteraction
-                ? context.editReply(errorMessage)
-                : context.channel.send(errorMessage);
+                ? context.editReply({ embeds: [errorEmbed] })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

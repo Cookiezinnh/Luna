@@ -1,9 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Warn = require('../../models/warns');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,10 +9,10 @@ module.exports = {
             option.setName('alvo')
                 .setDescription('Usuário ou ID do usuário alvo. (mencione, forneça o ID ou o nome)')
                 .setRequired(true)),
-    commandAlias: ['clswarns','removeallwarns'],
+    commandAlias: ['clswarns', 'removeallwarns'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -43,35 +39,48 @@ module.exports = {
                 member.user.tag === targetInput || member.user.username === targetInput);
 
         if (!target) {
-            const errorMessage = ':x: Usuário não encontrado.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário não encontrado.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
             const warnData = await Warn.findOne({ guildId: guild.id, userId: target.id });
 
             if (!warnData || !warnData.warns.length) {
-                const noWarnsMessage = ':x: Esse usuário não possui avisos.';
+                const noWarnsEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **Esse usuário não possui avisos.**');
+
                 return isInteraction
-                    ? context.reply({ content: noWarnsMessage, ephemeral: true })
-                    : context.channel.send(noWarnsMessage);
+                    ? context.reply({ embeds: [noWarnsEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [noWarnsEmbed] });
             }
 
             warnData.warns = [];
             await warnData.save();
 
-            const successMessage = `✅ Todos os avisos de ${target.user?.tag || targetId} foram removidos.`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Todos os avisos de ${target.user?.tag || targetId} foram removidos.**`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[ClearWarns Command] Erro ao limpar avisos:', error);
-            const errorMessage = ':x: Ocorreu um erro ao limpar os avisos.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao limpar os avisos.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

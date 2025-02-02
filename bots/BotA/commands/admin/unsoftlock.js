@@ -1,10 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const SoftLock = require('../../models/softlock');
 const RoleConfig = require('../../models/roleConfig');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,7 +10,7 @@ module.exports = {
             option.setName('usuario')
                 .setDescription('Usuário ou ID do usuário a ser desbloqueado.')
                 .setRequired(true)),
-    commandAlias: ['unlockuser','unuserlock','unpruneuser','unuserprune','unprune'],
+    commandAlias: ['unlockuser', 'unuserlock', 'unpruneuser', 'unuserprune', 'unprune'],
     requiredRoles: ['ADMIN', 'MODERATOR'],
     supportsPrefix: true,
 
@@ -34,18 +30,24 @@ module.exports = {
             // Busca o cargo "Softlock" no MongoDB
             const roleConfig = await RoleConfig.findOne({ roleName: 'SOFTLOCKED_ROLE', guildId: guild.id });
             if (!roleConfig) {
-                const errorMessage = ':x: O cargo "Softlock" não foi configurado no banco de dados.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **O cargo "Softlock" não foi configurado no banco de dados.**');
+
                 return isInteraction
-                    ? context.reply({ content: errorMessage, ephemeral: true })
-                    : context.channel.send(errorMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             const softlockRole = guild.roles.cache.get(roleConfig.roleId);
             if (!softlockRole) {
-                const errorMessage = ':x: O cargo "Softlock" configurado no banco de dados não foi encontrado no servidor.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **O cargo "Softlock" configurado no banco de dados não foi encontrado no servidor.**');
+
                 return isInteraction
-                    ? context.reply({ content: errorMessage, ephemeral: true })
-                    : context.channel.send(errorMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             const targetId = targetInput?.replace(/[^0-9]/g, '');
@@ -55,26 +57,36 @@ module.exports = {
                     m.user.tag === targetInput || m.user.username === targetInput);
 
             if (!member) {
-                const errorMessage = ':x: Usuário não encontrado.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **Usuário não encontrado.**');
+
                 return isInteraction
-                    ? context.reply({ content: errorMessage, ephemeral: true })
-                    : context.channel.send(errorMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             await member.roles.remove(softlockRole);
 
             await SoftLock.findOneAndDelete({ guildId: guild.id, userId: member.id });
 
-            const successMessage = `✅ Usuário ${member.user.tag || targetId} foi desbloqueado.`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${member.user.tag || targetId} foi desbloqueado.**`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: false })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: false })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[UnSoftLock Command] Erro ao desbloquear o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar desbloquear o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar desbloquear o usuário.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

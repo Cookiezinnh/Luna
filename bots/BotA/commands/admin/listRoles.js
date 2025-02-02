@@ -1,15 +1,11 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const RoleConfig = require('../../models/roleConfig');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('list_roles')
         .setDescription('Exibe todos os cargos configurados para o servidor.'),
-    commandAlias: ['roleslist','listroles','roles_list'],
+    commandAlias: ['roleslist', 'listroles', 'roles_list'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true,
 
@@ -21,26 +17,37 @@ module.exports = {
             const roles = await RoleConfig.find({ guildId });
 
             if (!roles.length) {
-                const noRolesMessage = '⚠️ Nenhum cargo foi configurado para este servidor.';
+                const noRolesEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('⚠️ **Nenhum cargo foi configurado para este servidor.**');
+
                 return isInteraction
-                    ? context.reply({ content: noRolesMessage, ephemeral: true })
-                    : context.channel.send(noRolesMessage);
+                    ? context.reply({ embeds: [noRolesEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [noRolesEmbed] });
             }
 
             const roleList = roles
                 .map(role => `**${role.roleName}:** <@&${role.roleId}> (\`${role.roleId}\`)`)
                 .join('\n');
 
-            const successMessage = `📋 **Cargos configurados para este servidor:**\n\n${roleList}`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setTitle('📋 **Cargos configurados para este servidor:**')
+                .setDescription(roleList)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: false })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: false })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[List Roles] Erro ao buscar cargos:', error);
-            const errorMessage = ':x: Ocorreu um erro ao buscar os cargos configurados.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao buscar os cargos configurados.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

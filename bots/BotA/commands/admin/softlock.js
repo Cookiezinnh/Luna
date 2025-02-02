@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const SoftLock = require('../../models/softlock');
 const RoleConfig = require('../../models/roleConfig');
 
@@ -41,10 +41,13 @@ module.exports = {
         try {
             const roleConfig = await RoleConfig.findOne({ roleName: 'SOFTLOCKED_ROLE', guildId: guild.id });
             if (!roleConfig) {
-                const replyMessage = ':x: O cargo "Softlock" não foi configurado no banco de dados.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **O cargo "Softlock" não foi configurado no banco de dados.**');
+
                 return isInteraction
-                    ? context.reply({ content: replyMessage, ephemeral: true })
-                    : context.channel.send(replyMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             const softlockRole = guild.roles.cache.get(roleConfig.roleId);
@@ -70,16 +73,23 @@ module.exports = {
                 await SoftLock.create({ guildId: guild.id, userId: targetId });
             }
 
-            const successMessage = `✅ Usuário ${member?.user?.tag || targetId} foi softlockado. Motivo: ${reason}`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${member?.user?.tag || targetId} foi softlockado.**\n\n**Motivo:** ${reason}`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: false })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: false })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[SoftLock Command] Erro ao aplicar softlock:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar aplicar o softlock.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar aplicar o softlock.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

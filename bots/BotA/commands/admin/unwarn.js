@@ -1,9 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Warn = require('../../models/warns');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,10 +9,10 @@ module.exports = {
             option.setName('alvo')
                 .setDescription('Usuário ou ID do aviso a ser removido.')
                 .setRequired(true)),
-    commandAlias: ['unwarnuser','userunwarn'],
+    commandAlias: ['unwarnuser', 'userunwarn'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -44,10 +40,13 @@ module.exports = {
         }
 
         if (!targetUser) {
-            const errorMessage = ':x: Usuário ou ID inválido.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário ou ID inválido.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const warnId = isInteraction
@@ -55,43 +54,59 @@ module.exports = {
             : args[1];
 
         if (!warnId) {
-            const errorMessage = ':x: ID do aviso não fornecido.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **ID do aviso não fornecido.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
             const warnData = await Warn.findOne({ guildId: guild.id, userId: targetUser.id });
 
             if (!warnData || !warnData.warns.length) {
-                const noWarnsMessage = ':x: Esse usuário não possui avisos.';
+                const noWarnsEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **Esse usuário não possui avisos.**');
+
                 return isInteraction
-                    ? context.reply({ content: noWarnsMessage, ephemeral: true })
-                    : context.channel.send(noWarnsMessage);
+                    ? context.reply({ embeds: [noWarnsEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [noWarnsEmbed] });
             }
 
             const warnIndex = warnData.warns.findIndex(warn => warn.id === warnId);
             if (warnIndex === -1) {
-                const warnNotFoundMessage = ':x: ID do aviso não encontrado.';
+                const warnNotFoundEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **ID do aviso não encontrado.**');
+
                 return isInteraction
-                    ? context.reply({ content: warnNotFoundMessage, ephemeral: true })
-                    : context.channel.send(warnNotFoundMessage);
+                    ? context.reply({ embeds: [warnNotFoundEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [warnNotFoundEmbed] });
             }
 
             warnData.warns.splice(warnIndex, 1);
             await warnData.save();
 
-            const successMessage = `✅ O aviso com ID \`${warnId}\` foi removido de ${targetUser.user.tag}.`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **O aviso com ID \`${warnId}\` foi removido de ${targetUser.user.tag}.**`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Unwarn Command] Erro ao remover aviso:', error);
-            const errorMessage = ':x: Ocorreu um erro ao remover o aviso.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao remover o aviso.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

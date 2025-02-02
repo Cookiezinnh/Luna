@@ -1,10 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
 const categories = require('../../../../shared/categories'); // Importa categorias compartilhadas
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,18 +17,24 @@ module.exports = {
         // Obtém o cargo SOFTLOCKED_ROLE do MongoDB
         const softlockRoleConfig = await RoleConfig.findOne({ roleName: 'SOFTLOCKED_ROLE', guildId: guild.id });
         if (!softlockRoleConfig) {
-            const replyMessage = ':x: O cargo "Softlock" não está configurado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo "Softlock" não está configurado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: replyMessage, ephemeral: true })
-                : context.channel.send(replyMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const softlockRole = guild.roles.cache.get(softlockRoleConfig.roleId);
         if (!softlockRole) {
-            const replyMessage = ':x: O cargo "Softlock" configurado não foi encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo "Softlock" configurado não foi encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: replyMessage, ephemeral: true })
-                : context.channel.send(replyMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
@@ -56,16 +58,23 @@ module.exports = {
                 });
             }
 
-            const successMessage = '✅ Permissões de softlock configuradas para todos os canais do servidor (exceto os da categoria SoftLock).';
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription('✅ **Permissões de softlock configuradas para todos os canais do servidor (exceto os da categoria SoftLock).**')
+
             return isInteraction
-                ? context.editReply(successMessage)
-                : context.channel.send(successMessage);
+                ? context.editReply({ embeds: [successEmbed] })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[SoftLockSetup Command] Erro ao configurar permissões:', error);
-            const errorMessage = ':x: Ocorreu um erro ao configurar permissões de softlock.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao configurar permissões de softlock.**');
+
             return isInteraction
-                ? context.editReply(errorMessage)
-                : context.channel.send(errorMessage);
+                ? context.editReply({ embeds: [errorEmbed] })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

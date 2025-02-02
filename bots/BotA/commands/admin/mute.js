@@ -1,10 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Mute = require('../../models/mute');
 const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 function parseTime(input) {
     const regex = /(\d+)([smhda])/g;
@@ -42,11 +38,11 @@ module.exports = {
         .addStringOption(option =>
             option.setName('motivo')
                 .setDescription('Motivo para mutar o usuário.')
-                .setRequired(false)), 
-    commandAlias: ['muteuser','usermute'],
+                .setRequired(false)),
+    commandAlias: ['muteuser', 'usermute'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -82,35 +78,47 @@ module.exports = {
         // Obtém o cargo MUTED_ROLE do MongoDB
         const mutedRoleConfig = await RoleConfig.findOne({ roleName: 'MUTED_ROLE', guildId: guild.id });
         if (!mutedRoleConfig) {
-            const errorMessage = ':x: O cargo de "Mutado" não está configurado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" não está configurado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const muteRole = guild.roles.cache.get(mutedRoleConfig.roleId);
         if (!muteRole) {
-            const errorMessage = ':x: O cargo de "Mutado" configurado não foi encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" configurado não foi encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         if (!target) {
-            const errorMessage = ':x: Usuário não encontrado.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário não encontrado.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         let milliseconds;
         try {
             milliseconds = parseTime(duration);
         } catch (error) {
-            const errorMessage = ':x: Formato de tempo inválido. Use s, m, h, d, a.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Formato de tempo inválido. Use s, m, h, d, a.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const unmuteAt = new Date(Date.now() + milliseconds);
@@ -124,10 +132,13 @@ module.exports = {
                 unmuteAt,
             });
 
-            const successMessage = `✅ Usuário ${target.user?.tag || targetId} foi mutado por ${duration}. Motivo: ${reason}`;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${target.user?.tag || targetId} foi mutado por ${duration}.**\n\n**Motivo:** ${reason}`)
+
             await (isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage));
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] }));
 
             setTimeout(async () => {
                 try {
@@ -151,10 +162,14 @@ module.exports = {
             }, milliseconds);
         } catch (error) {
             console.error('[Mute Command] Erro ao mutar o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar mutar o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar mutar o usuário.**');
+
             await (isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage));
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] }));
         }
     },
 };

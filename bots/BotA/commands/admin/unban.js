@@ -1,8 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -12,10 +8,10 @@ module.exports = {
             option.setName('usuario')
                 .setDescription('ID ou tag do usuário a ser desbanido (ex: cookiezinnh#9319 ou 462031073891581962)')
                 .setRequired(true)),
-    commandAlias: ['unbanuser','userunban'],
+    commandAlias: ['unbanuser', 'userunban'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let input, guild;
@@ -39,40 +35,57 @@ module.exports = {
                 const bans = await guild.bans.fetch();
                 const user = bans.find(ban => `${ban.user.username}#${ban.user.discriminator}` === input);
                 if (!user) {
-                    const errorMessage = ':x: Nenhum banimento encontrado para essa tag de usuário.';
+                    const errorEmbed = new EmbedBuilder()
+                        .setColor(15548997) // Vermelho
+                        .setDescription('❌ **Nenhum banimento encontrado para essa tag de usuário.**');
+
                     return isInteraction
-                        ? context.reply({ content: errorMessage, ephemeral: true })
-                        : context.channel.send(errorMessage);
+                        ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                        : context.channel.send({ embeds: [errorEmbed] });
                 }
                 userId = user.user.id;
             } else {
-                const errorMessage = ':x: Entrada inválida. Use um ID ou tag de usuário válida.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **Entrada inválida. Use um ID ou tag de usuário válida.**');
+
                 return isInteraction
-                    ? context.reply({ content: errorMessage, ephemeral: true })
-                    : context.channel.send(errorMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             // Verificar se o usuário está realmente banido
             const isBanned = await guild.bans.fetch(userId).catch(() => null);
             if (!isBanned) {
-                const errorMessage = ':x: Este usuário não está banido.';
+                const errorEmbed = new EmbedBuilder()
+                    .setColor(15548997) // Vermelho
+                    .setDescription('❌ **Este usuário não está banido.**');
+
                 return isInteraction
-                    ? context.reply({ content: errorMessage, ephemeral: true })
-                    : context.channel.send(errorMessage);
+                    ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                    : context.channel.send({ embeds: [errorEmbed] });
             }
 
             // Tentar desbanir o usuário
             await guild.members.unban(userId);
-            const successMessage = `✅ Usuário com ID ${userId} foi desbanido do servidor.`;
+
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário com ID \`${userId}\` foi desbanido do servidor.**`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: false })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: false })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Unban Command] Erro ao desbanir o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar desbanir o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar desbanir o usuário.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

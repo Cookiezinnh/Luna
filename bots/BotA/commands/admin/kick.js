@@ -1,8 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,10 +12,10 @@ module.exports = {
             option.setName('motivo')
                 .setDescription('Motivo para expulsar o usuário.')
                 .setRequired(false)),
-    commandAlias: ['kickuser','userkick'],
+    commandAlias: ['kickuser', 'userkick'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -50,24 +46,35 @@ module.exports = {
                 member.user.tag === targetInput || member.user.username === targetInput);
 
         if (!targetMember) {
-            const errorMessage = ':x: Usuário não encontrado.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário não encontrado.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
             await targetMember.kick(reason);
-            const successMessage = `✅ Usuário ${targetMember.user?.tag || targetId} foi expulso do servidor. Motivo: ${reason}`;
+
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${targetMember.user?.tag || targetId} foi expulso do servidor.**\n\n**Motivo:** ${reason}`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Kick Command] Erro ao expulsar o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar expulsar o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar expulsar o usuário.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

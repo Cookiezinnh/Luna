@@ -2,9 +2,9 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('serverbanner')
-        .setDescription('Exibe o banner do servidor.'),
-    commandAlias: ['guildbanner'],
+        .setName('servericon')
+        .setDescription('Exibe o ícone do servidor.'),
+    commandAlias: ['serveravatar', 'guildicon'],
     requiredRoles: [], // Acessível a todos
     supportsPrefix: true,
 
@@ -12,22 +12,22 @@ module.exports = {
         const isInteraction = context.isCommand?.();
         const guild = context.guild;
 
-        const bannerUrl = guild.bannerURL({ dynamic: true, size: 1024 });
+        const iconUrl = guild.iconURL({ dynamic: true, size: 1024 });
 
-        if (!bannerUrl) {
-            const noBannerEmbed = new EmbedBuilder()
+        if (!iconUrl) {
+            const noIconEmbed = new EmbedBuilder()
                 .setColor(15548997) // Vermelho
-                .setDescription('❌ **Este servidor não possui um banner.**');
+                .setDescription('❌ **Este servidor não possui um ícone.**');
 
             return isInteraction
-                ? context.reply({ embeds: [noBannerEmbed], ephemeral: true })
-                : context.channel.send({ embeds: [noBannerEmbed] });
+                ? context.reply({ embeds: [noIconEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [noIconEmbed] });
         }
 
         const embed = new EmbedBuilder()
             .setColor(5763719) // Verde
-            .setTitle(`🎨 **Banner do Servidor: ${guild.name}**`)
-            .setImage(bannerUrl)
+            .setTitle(`🖼️ **Ícone do Servidor: ${guild.name}**`)
+            .setImage(iconUrl)
             .setFooter({ text: `Solicitado por ${isInteraction ? context.user.tag : context.author.tag}` });
 
         return isInteraction

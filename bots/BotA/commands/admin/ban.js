@@ -1,8 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -16,10 +12,10 @@ module.exports = {
             option.setName('motivo')
                 .setDescription('Motivo para banir o usuário')
                 .setRequired(false)),
-    commandAlias: ['banuser','userban'],
+    commandAlias: ['banuser', 'userban'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -50,24 +46,35 @@ module.exports = {
                 member.user.tag === targetInput || member.user.username === targetInput);
 
         if (!targetMember) {
-            const errorMessage = ':x: Usuário não encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription(':x: **Usuário não encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
             await targetMember.ban({ reason });
-            const successMessage = `✅ Usuário ${targetMember.user.tag || targetId} foi banido do servidor. Motivo: ${reason}`;
+
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${targetMember.user.tag || targetId} foi banido do servidor.**\n\n**Motivo:** ${reason}`)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Ban Command] Erro ao banir o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar banir o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription(':x: **Ocorreu um erro ao tentar banir o usuário.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

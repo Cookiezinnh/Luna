@@ -1,8 +1,4 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
+const { SlashCommandBuilder, ChannelType, EmbedBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -17,10 +13,10 @@ module.exports = {
                 .setDescription('Canal onde a mensagem será enviada.')
                 .addChannelTypes(ChannelType.GuildText) // Apenas canais de texto
                 .setRequired(false)),
-    commandAlias: ['botsay','saybot','talk'],
+    commandAlias: ['botsay', 'saybot', 'talk'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let member, guild, message, targetChannel;
@@ -39,10 +35,13 @@ module.exports = {
         }
 
         if (!message) {
-            const replyMessage = '⚠️ Você precisa especificar a mensagem a ser enviada.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('⚠️ **Você precisa especificar a mensagem a ser enviada.**');
+
             return isInteraction
-                ? context.reply({ content: replyMessage, ephemeral: true })
-                : context.channel.send(replyMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
@@ -50,15 +49,22 @@ module.exports = {
 
             // Envia mensagem de sucesso apenas se for via Slash Command
             if (isInteraction) {
-                const successMessage = `✅ Mensagem enviada em ${targetChannel}.`;
-                return context.reply({ content: successMessage, ephemeral: true });
+                const successEmbed = new EmbedBuilder()
+                    .setColor(5763719) // Verde
+                    .setDescription(`✅ **Mensagem enviada em ${targetChannel}.**`)
+
+                return context.reply({ embeds: [successEmbed], ephemeral: true });
             }
         } catch (error) {
             console.error('[Say Command] Erro ao enviar mensagem:', error);
-            const errorMessage = '❌ Ocorreu um erro ao tentar enviar a mensagem.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar enviar a mensagem.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

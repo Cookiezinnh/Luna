@@ -1,9 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -13,7 +9,7 @@ module.exports = {
             option.setName('usuario')
                 .setDescription('Usuário ou ID do usuário a ser desmutado.')
                 .setRequired(true)),
-    commandAlias: ['userunmute','unmuteuser'],
+    commandAlias: ['userunmute', 'unmuteuser'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
 
@@ -32,18 +28,24 @@ module.exports = {
         // Obtém o cargo MUTED_ROLE do MongoDB
         const mutedRoleConfig = await RoleConfig.findOne({ roleName: 'MUTED_ROLE', guildId: guild.id });
         if (!mutedRoleConfig) {
-            const errorMessage = ':x: O cargo de "Mutado" não está configurado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" não está configurado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const muteRole = guild.roles.cache.get(mutedRoleConfig.roleId);
         if (!muteRole) {
-            const errorMessage = ':x: O cargo de "Mutado" configurado não foi encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **O cargo de "Mutado" configurado não foi encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         // Tentar obter o membro pelo ID, menção ou nome
@@ -54,25 +56,37 @@ module.exports = {
                 m.user.tag === targetInput || m.user.username === targetInput);
 
         if (!member) {
-            const errorMessage = ':x: Usuário não encontrado.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário não encontrado.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         try {
             // Remover o cargo "mutado" do usuário
             await member.roles.remove(muteRole);
-            const successMessage = `✅ Usuário ${member.user.tag || targetId} foi desmutado.`;
+
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **Usuário ${member.user.tag || targetId} foi desmutado.**`)
+                .setImage('https://i.imgur.com/ixRDdCO.png'); // Imagem de exemplo
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: false })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: false })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Unmute Command] Erro ao desmutar o usuário:', error);
-            const errorMessage = ':x: Ocorreu um erro ao tentar desmutar o usuário.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao tentar desmutar o usuário.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };

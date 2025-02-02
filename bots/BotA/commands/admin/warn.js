@@ -1,10 +1,6 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const Warn = require('../../models/warns');
 const { v4: uuidv4 } = require('uuid');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -14,10 +10,10 @@ module.exports = {
             option.setName('alvo')
                 .setDescription('Usuário e motivo no formato: "@usuario motivo" ou "ID motivo".')
                 .setRequired(true)),
-    commandAlias: ['userwarn','warnuser'],
+    commandAlias: ['userwarn', 'warnuser'],
     requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
-    
+
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
         let guild, options;
@@ -37,10 +33,13 @@ module.exports = {
             : args.join(' ');
 
         if (!input) {
-            const errorMessage = ':x: Você precisa fornecer um usuário e um motivo.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Você precisa fornecer um usuário e um motivo.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         // Extrair o usuário/ID e o motivo da entrada
@@ -48,20 +47,26 @@ module.exports = {
         const reason = input.replace(/^<@!?(\d+)>|\d+/, '').trim();
 
         if (!reason) {
-            const errorMessage = ':x: Você precisa especificar um motivo para o aviso.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Você precisa especificar um motivo para o aviso.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         // Buscar o membro alvo pelo ID
         const targetMember = await guild.members.fetch(targetId).catch(() => null);
 
         if (!targetMember) {
-            const errorMessage = ':x: Usuário não encontrado no servidor.';
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Usuário não encontrado no servidor.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
 
         const moderator = isInteraction ? context.user.id : context.author.id;
@@ -82,16 +87,23 @@ module.exports = {
             warnData.warns.push({ id: warnId, reason, moderator });
             await warnData.save();
 
-            const successMessage = `✅ ${targetMember.user.tag} recebeu um aviso: "${reason}". ID do Warn: \`${warnId}\``;
+            const successEmbed = new EmbedBuilder()
+                .setColor(5763719) // Verde
+                .setDescription(`✅ **${targetMember.user.tag} recebeu um aviso:**\n\n**Motivo:** ${reason}\n**ID do Warn:** \`${warnId}\``)
+
             return isInteraction
-                ? context.reply({ content: successMessage, ephemeral: true })
-                : context.channel.send(successMessage);
+                ? context.reply({ embeds: [successEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [successEmbed] });
         } catch (error) {
             console.error('[Warn Command] Erro ao adicionar aviso:', error);
-            const errorMessage = ':x: Ocorreu um erro ao adicionar o aviso.';
+
+            const errorEmbed = new EmbedBuilder()
+                .setColor(15548997) // Vermelho
+                .setDescription('❌ **Ocorreu um erro ao adicionar o aviso.**');
+
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
-                : context.channel.send(errorMessage);
+                ? context.reply({ embeds: [errorEmbed], ephemeral: true })
+                : context.channel.send({ embeds: [errorEmbed] });
         }
     },
 };
