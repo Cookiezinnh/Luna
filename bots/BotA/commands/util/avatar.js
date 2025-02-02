@@ -8,7 +8,7 @@ module.exports = {
             option.setName('usuario')
                 .setDescription('ID, nome, nome#0000 ou menção (@usuário) do usuário.')
                 .setRequired(false)),
-    commandAlias: ['av', 'useravatar'],
+    commandAlias: ['useravatar'],
     requiredRoles: [], // Acessível a todos
     supportsPrefix: true,
 

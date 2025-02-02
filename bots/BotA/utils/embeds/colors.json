@@ -1,0 +1,13 @@
+{
+  "content": null,
+  "embeds": [
+    {
+      "description": "# 🎨 Cores\n\n## Como Escolher uma Cor\nPara escolher uma cor, utilize o comando `/escolher_cor` e digite o número correspondente à cor desejada. Você terá 30 segundos para fazer sua escolha.\n\n## Regras e Observações\n- Cada usuário pode ter apenas uma cor ativa por vez.\n- Se você escolher uma nova cor, a cor anterior será automaticamente removida.\n\n## 🎨 Cores Disponíveis\n> - 1  <@&1335643838177349773>\n> - 2  <@&1335643906091651086>\n> - 3  <@&1335643911808487454>\n> - 4  <@&1335643913054191686>\n> - 5  <@&1335643908088139796>\n> - 6  <@&1335643909015081000>\n> - 7  <@&1335643909333979146>\n> - 8  <@&1335643910923620495>\n> - 9  <@&1335643917521125488>\n> - 10  <@&1335643918284488725>\n> - 11  <@&1335643910135087285>\n> - 12  <@&1335645592185208903>\n> - 13  <@&1335645588825440296>\n> - 14  <@&1335643919127412838>\n> - 15 <@&1335645652742307963>\n> - 16  <@&1335645596408741969>\n> - 17  <@&1335645597406990506>\n> - 18  <@&1335645587172757505>\n> - 19  <@&1335645593611272193>\n> - 20  <@&1335645590264221798>",
+      "color": 16705372,
+      "image": {
+        "url": "https://i.imgur.com/zLl1MxP.png"
+      }
+    }
+  ],
+  "attachments": []
+}
