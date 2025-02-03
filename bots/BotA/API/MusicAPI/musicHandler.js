@@ -2,8 +2,9 @@ const { DisTube } = require('distube');
 const { EmbedBuilder } = require('discord.js');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 const path = require('path');
+const fs = require('fs');
 const channels = require('../../../../shared/channels.js');
-const emojis = require('../../../../shared/emojis');
+const Cookie = require('../../models/musicCookie'); // Importe o modelo do cookie
 
 module.exports = (client) => {
     client.distube = new DisTube(client, {
@@ -12,10 +13,30 @@ module.exports = (client) => {
         plugins: [
             new YtDlpPlugin({
                 update: false,
-                ytdlpArgs: [
-                    '--cookies', path.resolve(__dirname, 'cookies.txt'),
-                    '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
-                ],
+                ytdlpArgs: async () => {
+                    try {
+                        // Busca o cookie mais recente no banco de dados
+                        const cookie = await Cookie.findOne().sort({ lastUpdated: -1 });
+                        if (!cookie || !cookie.cookieText) {
+                            console.error('🟥 | [MusicHandler] Nenhum cookie encontrado no banco de dados.');
+                            return [];
+                        }
+
+                        // Salva o cookie em um arquivo temporário
+                        const cookiePath = path.resolve(__dirname, 'temp_cookies.txt');
+                        fs.writeFileSync(cookiePath, cookie.cookieText);
+
+                        console.log('🟩 | [MusicHandler] Cookie carregado com sucesso.');
+
+                        return [
+                            '--cookies', cookiePath,
+                            '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36'
+                        ];
+                    } catch (error) {
+                        console.error('🟥 | [MusicHandler] Erro ao carregar o cookie:', error);
+                        return [];
+                    }
+                },
             }),
         ],
     });
@@ -40,26 +61,28 @@ module.exports = (client) => {
         .on('playSong', (queue, song) => {
             const embed = new EmbedBuilder()
                 .setColor('#00FF00')
-                .setTitle(`${emojis.youtube} Tocando Agora`)
-                .setDescription(`**${song.name}** (${song.formattedDuration})\n[Link](${song.url})`)
-                .setThumbnail(song.thumbnail);
+                .setTitle('🎶 Tocando Agora')
+                .setDescription(`**[${song.name}](${song.url})** (${song.formattedDuration})`)
+                .setThumbnail(song.thumbnail)
+                .setFooter({ text: `Solicitado por ${song.user.tag}`, iconURL: song.user.displayAvatarURL() });
 
             queue.textChannel?.send({ embeds: [embed] });
         })
         .on('addSong', (queue, song) => {
             const embed = new EmbedBuilder()
                 .setColor('#0000FF')
-                .setTitle(`${emojis.youtube} Música Adicionada à Fila`)
-                .setDescription(`**${song.name}** (${song.formattedDuration})\n[Link](${song.url})`)
-                .setThumbnail(song.thumbnail);
+                .setTitle('➕ Música Adicionada à Fila')
+                .setDescription(`**[${song.name}](${song.url})** (${song.formattedDuration})`)
+                .setThumbnail(song.thumbnail)
+                .setFooter({ text: `Adicionado por ${song.user.tag}`, iconURL: song.user.displayAvatarURL() });
 
             queue.textChannel?.send({ embeds: [embed] });
         })
         .on('queueEnd', async (queue) => {
             console.log('🟨 | [Music] Fila de músicas vazia. Movendo para o canal LILYTH_HOME_CHANNEL.');
             try {
-                await client.distube.voices.leave(queue.voiceChannel); // Sai do canal atual, se conectado
-                await connectToHomeChannel(); // Reconecta ao canal LILYTH_HOME_CHANNEL
+                await client.distube.voices.leave(queue.voiceChannel);
+                await connectToHomeChannel();
             } catch (error) {
                 console.error('🟥 | [Music] Erro ao mover para o LILYTH_HOME_CHANNEL após a fila terminar:', error);
             }
@@ -67,12 +90,12 @@ module.exports = (client) => {
         .on('empty', async (queue) => {
             console.log('🟨 | [Music] Canal de voz vazio detectado. Movendo para o canal LILYTH_HOME_CHANNEL.');
             try {
-                await client.distube.voices.leave(queue.voiceChannel); // Sai do canal atual
-                await connectToHomeChannel(); // Reconecta ao LILYTH_HOME_CHANNEL
+                await client.distube.voices.leave(queue.voiceChannel);
+                await connectToHomeChannel();
             } catch (error) {
                 console.error('🟥 | [Music] Erro ao mover para o LILYTH_HOME_CHANNEL após o canal esvaziar:', error);
             }
-        })             
+        })
         .on('error', (channel, error) => {
             const embed = new EmbedBuilder()
                 .setColor('#FF0000')

@@ -1,17 +1,10 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const emojis = require('../../../../shared/emojis');
 
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('queue')
         .setDescription('Mostra a fila atual.'),
-    requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
-    supportsPrefix: true, // Habilita suporte a prefixo
-
     async execute(interaction) {
         const distube = interaction.client.distube;
 
@@ -21,27 +14,23 @@ module.exports = {
                 return interaction.reply({
                     embeds: [
                         new EmbedBuilder()
-                            .setColor('#FF0000') // Vermelho
-                            .setDescription('❌ Não há músicas na fila.'),
+                            .setColor('#FF0000')
+                            .setDescription('❌ Não há músicas na fila.')
                     ],
+                    ephemeral: true
                 });
             }
 
             const songs = queue.songs.map((song, index) => {
-                const platformEmoji = song.source === 'spotify'
-                    ? emojis.spotify
-                    : emojis.youtube;
-
-                return `**${index + 1}. ${platformEmoji} ${song.name} (${song.formattedDuration})**\n┗ \\<${song.url}\\>\n\n`;
-            }).join('');
+                const platformEmoji = song.source === 'spotify' ? emojis.spotify : emojis.youtube;
+                return `**${index + 1}. ${platformEmoji} [${song.name}](${song.url})** (${song.formattedDuration})`;
+            }).join('\n');
 
             const embed = new EmbedBuilder()
-                .setColor('#0000FF') // Azul
-                .setTitle('🎶 Fila Atual')
+                .setColor('#0000FF')
+                .setTitle('🎶 Fila de Músicas')
                 .setDescription(songs || 'Nenhuma música na fila.')
-                .setFooter({
-                    text: `Total: ${queue.songs.length} música(s) • Duração total: ${queue.formattedDuration}`,
-                });
+                .setFooter({ text: `Total: ${queue.songs.length} música(s) • Duração total: ${queue.formattedDuration}` });
 
             interaction.reply({ embeds: [embed] });
         } catch (error) {
@@ -49,10 +38,11 @@ module.exports = {
             interaction.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor('#FF0000') // Vermelho
-                        .setDescription('❌ Não foi possível mostrar a fila.'),
+                        .setColor('#FF0000')
+                        .setDescription('❌ Não foi possível mostrar a fila.')
                 ],
+                ephemeral: true
             });
         }
-    },
+    }
 };

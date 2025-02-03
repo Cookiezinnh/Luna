@@ -1,9 +1,4 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const ChannelConfig = require('../../models/channelConfig'); // Certifique-se de que o caminho esteja correto
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -36,28 +31,7 @@ module.exports = {
                 ],
             });
 
-            // Após parar a música e limpar a fila, reconectar ao LILYTH_HOME_CHANNEL
-            console.log('🟨 | [Music] Comando stop executado. Movendo para o canal LILYTH_HOME_CHANNEL.');
-
-            const homeChannelConfig = await ChannelConfig.findOne({
-                channelName: 'LILYTH_HOME_CHANNEL',
-                guildId: interaction.guildId,
-            });
-
-            if (!homeChannelConfig) {
-                console.error('🟥 | [Music] LILYTH_HOME_CHANNEL não está configurado no banco de dados.');
-                return;
-            }
-
-            const homeChannel = await interaction.client.channels.fetch(homeChannelConfig.channelId);
-            if (homeChannel?.isVoiceBased()) {
-                await distube.voices.leave(queue.voiceChannel); // Sai do canal de voz atual
-                await distube.voices.join(homeChannel); // Reconecta ao LILYTH_HOME_CHANNEL
-                console.log(`🟩 | [Music] Reconectado ao canal LILYTH_HOME_CHANNEL: ${homeChannel.name}`);
-            } else {
-                console.error('🟥 | [Music] LILYTH_HOME_CHANNEL não é um canal de voz válido.');
-            }
-
+            console.log('🟨 | [Music] Comando stop executado. A fila foi limpa.');
         } catch (error) {
             console.error('Erro ao parar a música:', error);
             interaction.reply({

@@ -1,9 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('clearqueue')
@@ -20,27 +16,40 @@ module.exports = {
                 return interaction.reply({
                     embeds: [
                         new EmbedBuilder()
-                            .setColor('#FF0000')
-                            .setDescription('❌ Não há nada tocando no momento.'),
+                            .setColor('#FF0000') // Vermelho
+                            .setTitle('❌ Nada Tocando')
+                            .setDescription('Não há música tocando no momento.')
+                            .setFooter({ text: `Solicitado por ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
                     ],
                     ephemeral: true,
                 });
             }
 
-            queue.songs = [queue.songs[0]];
+            // Salva a música atual
+            const currentSong = queue.songs[0];
+
+            // Limpa a fila, mantendo apenas a música atual
+            queue.songs = [currentSong];
 
             const embed = new EmbedBuilder()
-                .setColor('#00FF00')
-                .setDescription('🗑️ Fila limpa com sucesso, continuando a música atual.');
+                .setColor('#00FF00') // Verde
+                .setTitle('🗑️ Fila Limpa')
+                .setDescription('A fila foi limpa com sucesso, continuando a música atual.')
+                .addFields(
+                    { name: '🎶 Tocando Agora', value: `[${currentSong.name}](${currentSong.url}) (${currentSong.formattedDuration})`, inline: false }
+                )
+                .setThumbnail(currentSong.thumbnail)
+                .setFooter({ text: `Solicitado por ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
 
             interaction.reply({ embeds: [embed] });
         } catch (error) {
             console.error('Erro ao limpar a fila:', error);
 
             const errorEmbed = new EmbedBuilder()
-                .setColor('#FF0000')
+                .setColor('#FF0000') // Vermelho
                 .setTitle('❌ Erro ao Limpar Fila')
-                .setDescription(`**Motivo:** ${error.message || 'Desconhecido.'}`);
+                .setDescription(`**Motivo:** ${error.message || 'Desconhecido.'}`)
+                .setFooter({ text: `Solicitado por ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() });
 
             interaction.reply({ embeds: [errorEmbed], ephemeral: true });
         }

@@ -2,15 +2,35 @@ const channels = require('../../../../shared/channels.js');
 const PrivateVC = require('../../models/privateVoiceChannel.js');
 const Categories = require('../../../../shared/categories.js');
 
+// Variável para controlar o cooldown de reconexão
+let reconnectCooldown = false;
+
 module.exports = async (client, oldState, newState) => {
     try {
         // Verificar se o bot foi desconectado
         if (oldState.member?.id === client.user.id && !newState.channel) {
             console.log('🟨 | [VoiceState] Bot foi desconectado. Tentando reconectar ao LILYTH_HOME_CHANNEL.');
 
+            // Verificar se já está em cooldown
+            if (reconnectCooldown) {
+                console.log('🟧 | [VoiceState] Cooldown ativo. Ignorando reconexão.');
+                return;
+            }
+
             try {
                 const homeChannel = await client.channels.fetch(channels.LILYTH_HOME_CHANNEL);
                 if (homeChannel?.isVoiceBased()) {
+                    // Verificar se o bot já está no LILYTH_HOME_CHANNEL
+                    const currentChannel = client.distube.voices.get(oldState.guild.id)?.channel;
+                    if (currentChannel?.id === homeChannel.id) {
+                        console.log('🟩 | [VoiceState] O bot já está no LILYTH_HOME_CHANNEL.');
+                        return;
+                    }
+
+                    // Ativar cooldown
+                    reconnectCooldown = true;
+                    setTimeout(() => (reconnectCooldown = false), 10000); // 10 segundos de cooldown
+
                     await client.distube.voices.leave(oldState.channel); // Remove qualquer conexão antiga
                     await client.distube.voices.join(homeChannel); // Reconecta ao canal correto
                     console.log(`🟩 | [VoiceState] Reconectado ao canal LILYTH_HOME_CHANNEL: ${homeChannel.name}`);
