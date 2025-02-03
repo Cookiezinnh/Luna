@@ -2,16 +2,14 @@ const channels = require('../../../../shared/channels.js');
 const PrivateVC = require('../../models/privateVoiceChannel.js');
 const Categories = require('../../../../shared/categories.js');
 
-// Variável para controlar o cooldown de reconexão
 let reconnectCooldown = false;
 
 module.exports = async (client, oldState, newState) => {
     try {
-        // Verificar se o bot foi desconectado
+        // Reconexão do bot
         if (oldState.member?.id === client.user.id && !newState.channel) {
             console.log('🟨 | [VoiceState] Bot foi desconectado. Tentando reconectar ao LILYTH_HOME_CHANNEL.');
 
-            // Verificar se já está em cooldown
             if (reconnectCooldown) {
                 console.log('🟧 | [VoiceState] Cooldown ativo. Ignorando reconexão.');
                 return;
@@ -20,19 +18,17 @@ module.exports = async (client, oldState, newState) => {
             try {
                 const homeChannel = await client.channels.fetch(channels.LILYTH_HOME_CHANNEL);
                 if (homeChannel?.isVoiceBased()) {
-                    // Verificar se o bot já está no LILYTH_HOME_CHANNEL
                     const currentChannel = client.distube.voices.get(oldState.guild.id)?.channel;
                     if (currentChannel?.id === homeChannel.id) {
                         console.log('🟩 | [VoiceState] O bot já está no LILYTH_HOME_CHANNEL.');
                         return;
                     }
 
-                    // Ativar cooldown
                     reconnectCooldown = true;
-                    setTimeout(() => (reconnectCooldown = false), 10000); // 10 segundos de cooldown
+                    setTimeout(() => (reconnectCooldown = false), 10000);
 
-                    await client.distube.voices.leave(oldState.channel); // Remove qualquer conexão antiga
-                    await client.distube.voices.join(homeChannel); // Reconecta ao canal correto
+                    await client.distube.voices.leave(oldState.channel);
+                    await client.distube.voices.join(homeChannel);
                     console.log(`🟩 | [VoiceState] Reconectado ao canal LILYTH_HOME_CHANNEL: ${homeChannel.name}`);
                 } else {
                     console.error('🟥 | [VoiceState] LILYTH_HOME_CHANNEL não é um canal de voz válido.');
@@ -48,23 +44,19 @@ module.exports = async (client, oldState, newState) => {
 
             if (privateVC) {
                 try {
-                    // Obter permissões do canal original
                     const permissions = newState.channel?.permissionOverwrites.cache.map(overwrite => overwrite.toJSON()) || [];
 
-                    // Criar canal privado
                     const clone = await newState.guild.channels.create({
                         name: privateVC.name,
-                        type: 2, // Tipo de canal de voz
+                        type: 2,
                         parent: Categories.CLONED_VC_CATEGORY,
                         permissionOverwrites: permissions,
                     });
 
                     console.log(`🟩 | [VoiceState] Canal privado criado: ${clone.name} (${clone.id}).`);
 
-                    // Mover o usuário para o novo canal
                     await newState.member.voice.setChannel(clone);
 
-                    // Verificar se o canal está vazio e deletá-lo
                     const interval = setInterval(async () => {
                         if (clone.members.size === 0) {
                             clearInterval(interval);

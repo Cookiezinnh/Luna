@@ -1,30 +1,26 @@
 const { SlashCommandBuilder } = require('discord.js');
 const Categories = require('../../../../shared/categories.js');
 
-// Precisa atualizar as categorias
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('closeprivatevc')
         .setDescription('Fecha o seu canal de voz temporário.'),
-    commandAlias: ['closepvc','clpvc'],
+    commandAlias: ['closepvc', 'clpvc'],
     requiredRoles: [],
     supportsPrefix: true,
 
     async execute(context, args) {
         const isInteraction = context.isCommand?.();
-        let guild, member;
+        const guild = context.guild;
+        const member = isInteraction ? context.member : context.member || context.author;
 
-        // Identifica se é um comando Slash ou prefixado
-        if (isInteraction) {
-            guild = context.guild;
-            member = context.member;
-        } else {
-            guild = context.guild;
-            member = context.member || context.author;
+        if (!member || !guild) {
+            const errorMessage = '❌ Não foi possível identificar o usuário ou servidor.';
+            return isInteraction
+                ? context.reply({ content: errorMessage, ephemeral: true })
+                : context.channel.send(errorMessage);
         }
 
-        // Verifica se o membro está em um canal de voz
         const voiceState = guild.voiceStates.cache.get(member.id);
         if (!voiceState?.channel) {
             const replyMessage = '⚠️ Você não está em um canal de voz!';
@@ -35,7 +31,6 @@ module.exports = {
 
         const channel = voiceState.channel;
 
-        // Verifica se está em uma categoria específica
         if (channel.parentId !== Categories.CLONED_VC_CATEGORY) {
             const replyMessage = '⚠️ Este canal não pode ser fechado com este comando!';
             return isInteraction
