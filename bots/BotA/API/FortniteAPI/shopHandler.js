@@ -11,11 +11,11 @@ module.exports = async (client) => {
                 console.error('🟥 | [ShopHandler] Canal não encontrado ou ID inválido. Verifique o FORTNITE_STORE_CHANNEL em shared/channels.js.');
                 return;
             }
-            
+
             if (!channel.permissionsFor(client.user).has(['SendMessages', 'ViewChannel'])) {
                 console.error('🟥 | [ShopHandler] Permissões insuficientes para enviar mensagens no canal.');
                 return;
-            }            
+            }
 
             const response = await axios.get('https://fortnite-api.com/v2/shop', {
                 headers: { Authorization: config.fortniteApiKey },
@@ -23,14 +23,12 @@ module.exports = async (client) => {
 
             let shopEntries = response.data?.data?.entries || [];
 
-            // Filtrar itens válidos
+            // Filtrar itens válidos (incluindo carros e jamtracks)
             shopEntries = shopEntries.filter(entry => {
                 const cosmetic = entry.brItems?.[0];
-                const category = entry.layout?.name?.toLowerCase();
                 return (
                     cosmetic?.name &&
-                    cosmetic?.description &&
-                    !['bundles', 'car', 'jamtracks'].includes(category)
+                    cosmetic?.description
                 );
             });
 
@@ -60,21 +58,35 @@ module.exports = async (client) => {
                 const createEmbed = (pageIndex) => {
                     const item = items[pageIndex];
                     const cosmetic = item.brItems?.[0];
-                    const itemColor = cosmetic?.colors?.primary || '#ff0000';
+
+                    // Formatar a data de saída da loja (outDate)
+                    const expiryDate = new Date(item.outDate).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                    });
+
+                    // Cor do embed (usando Background_Color_A)
+                    const embedColor = parseInt(cosmetic?.colors?.Background_color_B?.replace('#', '0x') || '0x090b11', 16);
+
                     return new EmbedBuilder()
-                        .setTitle(cosmetic.name)
-                        .setDescription(cosmetic.description)
-                        .setThumbnail(cosmetic?.images?.smallIcon || null)
-                        .setImage(cosmetic?.images?.icon || null)
-                        .setColor(itemColor)
-                        .addFields(
-                            { name: 'Preço', value: `${item.finalPrice} V-Bucks`, inline: true },
-                            { name: 'Giftável', value: item.giftable ? 'Sim' : 'Não', inline: true },
-                            { name: 'Reembolsável', value: item.refundable ? 'Sim' : 'Não', inline: true },
+                        .setTitle(`:shopping_cart: Loja do Fortnite // ${categoryName}`)
+                        .setDescription(
+                            `> # ${cosmetic.name}\n` +
+                            `> -# ${cosmetic.type?.value || 'Desconhecido'} // ${cosmetic.rarity?.value || 'Desconhecida'}\n\n` +
+                            `### <:vbucks:1335969739452973096> ${item.finalPrice} V-Bucks\n\n` +
+                            `\`\`\`ansi\n${cosmetic.description}\n\`\`\`\n` +
+                            `-# Sai da loja em: ${expiryDate}`
                         )
-                        .setAuthor({ name: categoryName })
-                        .setFooter({ text: `Última atualização: ${new Date().toLocaleString()}` })
-                        .setTimestamp();
+                        .setImage(cosmetic?.images?.icon || null)
+                        .setColor(embedColor)
+                        .addFields(
+                            { name: 'Giftável', value: item.giftable ? 'Sim' : 'Não', inline: true },
+                            { name: 'Reembolsável', value: item.refundable ? 'Sim' : 'Não', inline: true }
+                        )
+                        .setFooter({ text: `Página ${pageIndex + 1} de ${items.length} | Loja atualizada em: ${new Date().toLocaleString('pt-BR')}` })
                 };
 
                 const updateButtons = (pageIndex) => {
@@ -97,7 +109,7 @@ module.exports = async (client) => {
 
                 const message = await channel.send({ embeds: [embed], components: [buttons] });
 
-                const collector = message.createMessageComponentCollector();
+                const collector = message.createMessageComponentCollector({ time: 0 }); // Botões sem tempo de expiração
 
                 collector.on('collect', async (i) => {
                     if (i.customId === `previous_${categoryName}`) currentPage--;
