@@ -20,24 +20,45 @@ module.exports = {
 
         const distube = client.distube;
         if (!distube) {
-            const errorMessage = 'O sistema de música não está configurado corretamente.';
+            const errorMessage = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nO sistema de música não está configurado corretamente.'),
+                ],
+                ephemeral: true,
+            };
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
+                ? context.reply(errorMessage)
                 : context.channel.send(errorMessage);
         }
 
         const voiceChannel = member.voice.channel;
         if (!voiceChannel) {
-            const errorMessage = 'Você precisa estar em um canal de voz para usar este comando!';
+            const errorMessage = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nVocê precisa estar em um canal de voz para usar este comando!'),
+                ],
+                ephemeral: true,
+            };
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
+                ? context.reply(errorMessage)
                 : context.channel.send(errorMessage);
         }
 
         if (!voiceChannel.joinable) {
-            const errorMessage = 'Eu não consigo entrar no canal de voz. Verifique minhas permissões!';
+            const errorMessage = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nEu não consigo entrar no canal de voz. Verifique minhas permissões!'),
+                ],
+                ephemeral: true,
+            };
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
+                ? context.reply(errorMessage)
                 : context.channel.send(errorMessage);
         }
 
@@ -46,9 +67,16 @@ module.exports = {
             : args.join(' ');
 
         if (!query) {
-            const errorMessage = 'Você precisa fornecer o nome ou URL de uma música para tocar!';
+            const errorMessage = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nVocê precisa fornecer o nome ou URL de uma música para tocar!'),
+                ],
+                ephemeral: true,
+            };
             return isInteraction
-                ? context.reply({ content: errorMessage, ephemeral: true })
+                ? context.reply(errorMessage)
                 : context.channel.send(errorMessage);
         }
 
@@ -63,24 +91,39 @@ module.exports = {
                 await cacheSearch(query, videoUrl); // Cacheia o resultado
             }
 
+            // Verifica se o bot já está conectado ao canal de voz
+            if (!distube.voices.get(voiceChannel.guild.id)) {
+                await distube.voices.join(voiceChannel);
+            }
+
             // Força o DisTube a usar diretamente a URL retornada pela API
             await distube.play(voiceChannel, videoUrl, { 
                 member, 
                 textChannel: context.channel, 
-                skip: true, // Evita reprocessar o link com yt-dlp 
             });
 
-            const successMessage = `🎶 Música adicionada à fila ou tocando agora: ${videoUrl}`;
+            // Obtém a música adicionada à fila
+            const queue = distube.getQueue(voiceChannel.guild.id);
+            const song = queue.songs[queue.songs.length - 1]; // Última música adicionada
+
+            const successMessage = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0x57F287) // Verde
+                        .setDescription(`# ➕ Música Adicionada à Fila\n\n**[${song.name}](${song.url})**\n\n- **Duração:** ${song.formattedDuration}\n- **Adicionado por:** ${context.member.user.tag}\n- **Plataforma:** ${song.source === 'youtube' ? 'YouTube' : 'Spotify'}`)
+                        .setImage(song.thumbnail),
+                ],
+            };
+
             return isInteraction
-                ? context.editReply({ content: successMessage })
+                ? context.editReply(successMessage)
                 : context.channel.send(successMessage);
         } catch (error) {
             console.error('Erro ao tocar música:', error);
 
             const embed = new EmbedBuilder()
-                .setColor('#FF0000')
-                .setTitle('❌ Erro ao Tocar Música')
-                .setDescription(`Erro: ${error.message || 'Desconhecido.'}`);
+                .setColor(0xED4245) // Vermelho
+                .setDescription('# ❌ Erro\n\nNão foi possível tocar a música.');
 
             if (isInteraction) {
                 if (context.replied || context.deferred) {

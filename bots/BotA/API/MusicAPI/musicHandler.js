@@ -60,21 +60,9 @@ module.exports = (client) => {
     client.distube
         .on('playSong', (queue, song) => {
             const embed = new EmbedBuilder()
-                .setColor('#00FF00')
-                .setTitle('🎶 Tocando Agora')
-                .setDescription(`**[${song.name}](${song.url})** (${song.formattedDuration})`)
-                .setThumbnail(song.thumbnail)
-                .setFooter({ text: `Solicitado por ${song.user.tag}`, iconURL: song.user.displayAvatarURL() });
-
-            queue.textChannel?.send({ embeds: [embed] });
-        })
-        .on('addSong', (queue, song) => {
-            const embed = new EmbedBuilder()
-                .setColor('#0000FF')
-                .setTitle('➕ Música Adicionada à Fila')
-                .setDescription(`**[${song.name}](${song.url})** (${song.formattedDuration})`)
-                .setThumbnail(song.thumbnail)
-                .setFooter({ text: `Adicionado por ${song.user.tag}`, iconURL: song.user.displayAvatarURL() });
+                .setColor(0x5865F2) // Azul
+                .setDescription(`# 🎶 Tocando Agora\n\n**[${song.name}](${song.url})**\n\n- **Duração:** ${song.formattedDuration}\n- **Solicitado por:** ${song.user.tag}\n- **Plataforma:** ${song.source === 'youtube' ? 'YouTube' : 'Spotify'}`)
+                .setImage(song.thumbnail);
 
             queue.textChannel?.send({ embeds: [embed] });
         })
@@ -98,9 +86,8 @@ module.exports = (client) => {
         })
         .on('error', (channel, error) => {
             const embed = new EmbedBuilder()
-                .setColor('#FF0000')
-                .setTitle('❌ Erro do Sistema de Música')
-                .setDescription(`Erro: \`${error.message || 'Desconhecido'}\``);
+                .setColor(0xED4245) // Vermelho
+                .setDescription(`# ❌ Erro do Sistema de Música\n\n**Erro:** \`${error.message || 'Desconhecido'}\``);
 
             channel?.send?.({ embeds: [embed] }).catch(console.error);
         });

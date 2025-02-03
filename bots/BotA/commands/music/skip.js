@@ -1,8 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
+const channels = require('../../../../shared/channels.js'); // Importe o arquivo de canais
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -10,7 +7,7 @@ module.exports = {
         .setDescription(
             'Pula a música atual. Caso haja 3 ou mais pessoas na call, inicia uma votação.'
         ),
-    requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
+    requiredRoles: [], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
 
     async execute(interaction) {
@@ -21,10 +18,8 @@ module.exports = {
             return interaction.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor(0xff0000)
-                        .setDescription(
-                            '❌ Você precisa estar em um canal de voz para usar este comando.'
-                        ),
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nVocê precisa estar em um canal de voz para usar este comando.'),
                 ],
                 ephemeral: true,
             });
@@ -38,19 +33,45 @@ module.exports = {
                 return interaction.reply({
                     embeds: [
                         new EmbedBuilder()
-                            .setColor(0xff0000)
-                            .setDescription('❌ Não há nada tocando no momento.'),
+                            .setColor(0xED4245) // Vermelho
+                            .setDescription('# ❌ Erro\n\nNão há nada tocando no momento.'),
+                    ],
+                });
+            }
+
+            // Verifica se há uma próxima música na fila
+            if (queue.songs.length <= 1) {
+                // Se não houver próxima música, para a fila e move para o canal de standby
+                await queue.stop();
+                console.log('🟨 | [Music] Fila de músicas vazia. Movendo para o canal de standby.');
+
+                const homeChannelId = channels.LILYTH_HOME_CHANNEL;
+                console.log('Tentando mover para o canal de standby:', homeChannelId);
+                const homeChannel = await interaction.client.channels.fetch(homeChannelId).catch(console.error);
+
+                if (homeChannel && homeChannel.isVoiceBased()) {
+                    await distube.voices.join(homeChannel);
+                    console.log(`🟩 | [Music] Reconectado ao canal de standby: ${homeChannel.name}`);
+                } else {
+                    console.error('🟥 | [Music] LILYTH_HOME_CHANNEL não é um canal de voz válido.');
+                }
+
+                return interaction.reply({
+                    embeds: [
+                        new EmbedBuilder()
+                            .setColor(0x5865F2) // Azul
+                            .setDescription('# ⏭️ Fila Finalizada\n\nA fila de músicas acabou. O bot foi movido para o canal de standby.'),
                     ],
                 });
             }
 
             if (membersInChannel < 3) {
-                queue.skip();
+                await queue.skip();
                 return interaction.reply({
                     embeds: [
                         new EmbedBuilder()
-                            .setColor(0x00ff00)
-                            .setDescription('⏭️ Música pulada.'),
+                            .setColor(0x57F287) // Verde
+                            .setDescription('# ⏭️ Música Pulada\n\nA música foi pulada com sucesso.'),
                     ],
                 });
             }
@@ -59,10 +80,8 @@ module.exports = {
             const message = await interaction.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor(0xffff00)
-                        .setDescription(
-                            '🗳️ Votação iniciada para pular a música. Reaja com ✅ para votar.'
-                        ),
+                        .setColor(0xFEE75C) // Amarelo
+                        .setDescription('# 🗳️ Votação Iniciada\n\nReaja com ✅ para votar em pular a música.'),
                 ],
                 fetchReply: true,
             });
@@ -88,8 +107,8 @@ module.exports = {
                     interaction.editReply({
                         embeds: [
                             new EmbedBuilder()
-                                .setColor(0x00ff00)
-                                .setDescription('⏭️ A votação foi aprovada. Música pulada.'),
+                                .setColor(0x57F287) // Verde
+                                .setDescription('# ⏭️ Votação Aprovada\n\nA música foi pulada com sucesso.'),
                         ],
                     });
                     collector.stop();
@@ -101,10 +120,8 @@ module.exports = {
                     interaction.editReply({
                         embeds: [
                             new EmbedBuilder()
-                                .setColor(0xff0000)
-                                .setDescription(
-                                    '❌ A votação foi encerrada. Não houve votos suficientes para pular a música.'
-                                ),
+                                .setColor(0xED4245) // Vermelho
+                                .setDescription('# ❌ Votação Encerrada\n\nNão houve votos suficientes para pular a música.'),
                         ],
                     });
                 }
@@ -114,8 +131,8 @@ module.exports = {
             interaction.reply({
                 embeds: [
                     new EmbedBuilder()
-                        .setColor(0xff0000)
-                        .setDescription('❌ Não foi possível pular a música.'),
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nNão foi possível pular a música.'),
                 ],
             });
         }

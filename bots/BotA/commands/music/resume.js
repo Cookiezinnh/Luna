@@ -1,48 +1,67 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
-// -------- x ---- - x - ---- x -------- \\
-// Comando Atualizado para a nova update:
-// -------- x ---- - x - ---- x -------- //
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('resume')
         .setDescription('Retoma a música que está pausada.'),
-    requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
+    requiredRoles: [], // Restrições de Cargo
     supportsPrefix: true, // Habilita suporte a prefixo
 
-    async execute(interaction) {
-        const distube = interaction.client.distube;
+    async execute(interaction, args) {
+        const distube = interaction?.client.distube || args.client.distube;
+        const voiceChannel = interaction?.member?.voice.channel || args.member?.voice.channel;
+
+        if (!voiceChannel) {
+            const reply = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nVocê precisa estar em um canal de voz para usar este comando.'),
+                ],
+                ephemeral: true,
+            };
+
+            return interaction ? interaction.reply(reply) : args.message.reply(reply);
+        }
 
         try {
-            const queue = distube.getQueue(interaction.guildId);
+            const queue = distube.getQueue(interaction?.guildId || args.guildId);
             if (!queue || !queue.paused) {
-                return interaction.reply({
+                const reply = {
                     embeds: [
                         new EmbedBuilder()
-                            .setColor('#FF0000')
-                            .setDescription('❌ Não há música pausada no momento.'),
+                            .setColor(0xED4245) // Vermelho
+                            .setDescription('# ❌ Erro\n\nNão há música pausada no momento.'),
                     ],
                     ephemeral: true,
-                });
+                };
+
+                return interaction ? interaction.reply(reply) : args.message.reply(reply);
             }
 
             queue.resume();
 
-            const embed = new EmbedBuilder()
-                .setColor('#00FF00')
-                .setDescription('▶️ Música retomada com sucesso.');
+            const reply = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0x57F287) // Verde
+                        .setDescription('# ▶️ Música Retomada\n\nA música foi retomada com sucesso.'),
+                ],
+            };
 
-            interaction.reply({ embeds: [embed] });
+            return interaction ? interaction.reply(reply) : args.message.reply(reply);
         } catch (error) {
             console.error('Erro ao retomar música:', error);
+            const reply = {
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0xED4245) // Vermelho
+                        .setDescription('# ❌ Erro\n\nNão foi possível retomar a música.'),
+                ],
+                ephemeral: true,
+            };
 
-            const errorEmbed = new EmbedBuilder()
-                .setColor('#FF0000')
-                .setTitle('❌ Erro ao Retomar Música')
-                .setDescription(`**Motivo:** ${error.message || 'Desconhecido.'}`);
-
-            interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+            return interaction ? interaction.reply(reply) : args.message.reply(reply);
         }
     },
 };
