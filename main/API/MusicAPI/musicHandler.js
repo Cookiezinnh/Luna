@@ -3,7 +3,7 @@ const { EmbedBuilder } = require('discord.js');
 const { YtDlpPlugin } = require('@distube/yt-dlp');
 const path = require('path');
 const fs = require('fs');
-const channels = require('../../../../shared/channels.js');
+const channels = require('../../../shared/channels.js');
 const Cookie = require('../../models/musicCookie'); // Importe o modelo do cookie
 
 module.exports = (client) => {

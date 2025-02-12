@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const config = require('../../config.json');
-const channels = require('../../../../shared/channels');
+const channels = require('../../../shared/channels');
 
 module.exports = async (client) => {
     const updateShop = async () => {

@@ -1,7 +1,7 @@
 const SoftLock = require('../../models/softlock');
 const Mute = require('../../models/mute');
 const RoleConfig = require('../../models/roleConfig'); // Modelo para buscar cargos no MongoDB
-const emojis = require('../../../../shared/emojis');
+const emojis = require('../../../shared/emojis');
 
 module.exports = async (client, member) => {
   try {

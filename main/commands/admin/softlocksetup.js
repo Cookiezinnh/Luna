@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const RoleConfig = require('../../models/roleConfig'); // Modelo MongoDB para configuração de cargos
-const categories = require('../../../../shared/categories'); // Importa categorias compartilhadas
+const categories = require('../../../shared/categories'); // Importa categorias compartilhadas
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const Categories = require('../../../../shared/categories.js');
+const Categories = require('../../../shared/categories.js');
 
 module.exports = {
     data: new SlashCommandBuilder()

@@ -5,7 +5,7 @@ const path = require('path');
 const schedule = require('node-schedule');
 
 const Prefix = require('./models/prefix'); // Adicionar a importação do modelo
-const channels = require('../../shared/channels');
+const channels = require('../shared/channels');
 const config = require('./config.json');
 const Mute = require('./models/mute'); // Ajuste para o caminho e nome correto
 

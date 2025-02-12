@@ -1,4 +1,4 @@
-const emojis = require('../../../../shared/emojis');
+const emojis = require('../../../shared/emojis');
 const RoleConfig = require('../../models/roleConfig'); // Ajuste o caminho se necessário
 
 module.exports = async (client, interaction) => {

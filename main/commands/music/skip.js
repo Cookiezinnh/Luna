@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const channels = require('../../../../shared/channels.js'); // Importe o arquivo de canais
+const channels = require('../../../shared/channels.js'); // Importe o arquivo de canais
 
 module.exports = {
     data: new SlashCommandBuilder()

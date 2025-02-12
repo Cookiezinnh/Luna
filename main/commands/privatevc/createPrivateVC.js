@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const PrivateVC = require('../../models/privateVoiceChannel.js');
-const Categories = require('../../../../shared/categories.js');
+const Categories = require('../../../shared/categories.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
