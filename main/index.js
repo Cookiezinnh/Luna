@@ -8,6 +8,7 @@ const Prefix = require('./models/prefix'); // Adicionar a importação do modelo
 const channels = require('../shared/channels');
 const config = require('./config.json');
 const Mute = require('./models/mute'); // Ajuste para o caminho e nome correto
+const MinecraftServer = require('./models/MinecraftServer'); // Importação do modelo MinecraftServer
 
 const client = new Client({
     intents: [
@@ -136,6 +137,20 @@ client.login(config.token).then(async () => {
         console.error('🟥 | [Mute Restore] Erro ao restaurar mutes ativos:', error);
     }
     
+    // Carregar handler de Minecraft
+    const minecraftHandlerPath = path.join(__dirname, 'API/MinecraftAPI/minecraftHandler.js');
+    try {
+        const minecraftHandler = require(minecraftHandlerPath);
+        if (typeof minecraftHandler === 'function') {
+            await minecraftHandler(client); // Passa o client para o handler
+            console.log('🟩 | [Handlers] Handler de Minecraft carregado com sucesso após o login.');
+        } else {
+            console.error('🟥 | [Handlers] minecraftHandler não exporta uma função válida.');
+        }
+    } catch (error) {
+        console.error('🟥 | [Handlers] Erro ao carregar o handler de Minecraft após o login:', error);
+    }
+    
 }).catch(err => {
     console.error(`🟥 | [Bot] Erro ao logar:`, err);
 });
@@ -147,5 +162,15 @@ schedule.scheduleJob('0 * * * *', async () => {
         await client.updateShop();
     } else {
         console.warn('🟥 | [Scheduler] Função updateShop não encontrada.');
+    }
+});
+
+// Atualizar status dos servidores de Minecraft a cada 5 minutos
+schedule.scheduleJob('*/5 * * * *', async () => {
+    console.log('🟩 | [Scheduler] Atualizando status dos servidores de Minecraft.');
+    if (typeof client.updateMinecraftStatus === 'function') {
+        await client.updateMinecraftStatus();
+    } else {
+        console.warn('🟥 | [Scheduler] Função updateMinecraftStatus não encontrada.');
     }
 });

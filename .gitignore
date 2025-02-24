@@ -1,6 +1,7 @@
 discloud.config
 .env
 
+backup
 main/config.json
 
 package-lock.json
