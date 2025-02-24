@@ -25,7 +25,7 @@ module.exports = {
                     option.setName('message_id')
                         .setDescription('O ID da mensagem que será removida.')
                         .setRequired(true))),
-    requiredRoles: [], // Permitir sem restrições adicionais
+    requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: true, // Agora suporta comandos via prefixo
 
     async execute(context, args) {

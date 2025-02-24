@@ -5,7 +5,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('mc_serverstatus_list')
         .setDescription('Lista todas as mensagens de status de servidores de Minecraft.'),
-    requiredRoles: [], // Permitir sem restrições adicionais
+    requiredRoles: ['ADMIN', 'MODERATOR'], // Restrições de Cargo
     supportsPrefix: false,
     async execute(interaction) {
         const servers = await MinecraftServer.find({ guildId: interaction.guild.id });
